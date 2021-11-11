@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laravel-app
+  template:
+    metadata:
+      labels:
+        app: laravel-app
+    spec:
+      containers:
+        # Nginx container
+        - name: nginx
+          image: cr.yandex/crpnmi1jeba8b4n3n0db/nginx:stable-alpine_v1.0
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/local.conf
+              subPath: local.conf
+            - name: project-files
+              mountPath: /var/www/laravel
+        # Php container
+        - name: php
+          image: cr.yandex/crpnmi1jeba8b4n3n0db/php:7.4-fpm-alpine4
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: project-files
+              mountPath: /var/www/laravel
+        # Redis container
+        - name: redis
+          image: cr.yandex/crpnmi1jeba8b4n3n0db/redis:redis1
+          command:
+            - redis-server
+            - "/redis.conf"
+        # Mysql container
+      volumes:
+        # Config map volume PHP
+        - name: nginx-config
+          configMap:
+            name: api-config-map
+        # All project files
+        - name: project-files
+          persistentVolumeClaim:
+            claimName: kitman-claim
+        # Volume for SSL
+        # - name: project-ssl
+        #   persistentVolumeClaim:
+        #     claimName: projects-pvc-ssl

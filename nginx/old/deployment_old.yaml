@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bb-backend
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-group
+  template:
+    metadata:
+      labels:
+        app: backend-group
+    spec:
+      containers:
+        # Nginx container
+        - name: nginx
+          image: cr.yandex/crp4b3g2mro7h6fi2tng/nginx:stable-alpine_v1.0
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/beautybox.conf
+              subPath: beautybox.conf
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/crm.conf
+              subPath: crm.conf
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: nginx-config
+              mountPath: /etc/nginx/ssl/dhparam.pem
+              subPath: dhparam.pem
+            - name: nginx-config
+              mountPath: /etc/nginx/ssl/fastcgi.conf
+              subPath: fastcgi.conf
+            - name: nginx-config
+              mountPath: /etc/nginx/ssl/production.conf
+              subPath: production.conf
+            - name: bb-php
+              mountPath: /var/www/beautybox-php
+            - name: bb-auth
+              mountPath: /var/www/beautybox-auth
+            - name: bb-crm
+              mountPath: /var/www/beautybox-crm
+            - name: bb-ssl
+              mountPath: /etc/nginx/ssl/certs
+        # Php container
+        - name: php
+          image: cr.yandex/crp4b3g2mro7h6fi2tng/php:7.4-fpm-alpine_v1.6
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: bb-php
+              mountPath: /var/www/beautybox-php
+        # Mysql container
+        - name: mysql
+          image: cr.yandex/crp4b3g2mro7h6fi2tng/mysql:5.7.22_v1.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_DATABSE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: database
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: password
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: password
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: user
+          volumeMounts:
+            - name: bb-mysql
+              mountPath: /var/lib/mysql
+        # Redis container
+        - name: redis
+          image: cr.yandex/crp4b3g2mro7h6fi2tng/redis:6-alpine_v1.0
+          command:
+            - redis-server
+            - "/redis.conf"
+      volumes:
+        # Config map volume PHP
+        - name: nginx-config
+          configMap:
+            name: bb-backend-config-map
+        # Persistent volume claim PHP
+        - name: bb-php
+          persistentVolumeClaim:
+            claimName: bb-php-volume-claim
+        # Persistent volume claim SSL
+        - name: bb-ssl
+          persistentVolumeClaim:
+            claimName: bb-ssl-volume-claim
+        # Persistent volume claim AUTH
+        - name: bb-auth
+          persistentVolumeClaim:
+            claimName: bb-auth-volume-claim
+        # Persistent volume claim AUTH
+        - name: bb-crm
+          persistentVolumeClaim:
+            claimName: bb-crm-volume-claim
+        # Data for mysql
+        - name: bb-mysql
+          persistentVolumeClaim:
+            claimName: bb-mysql-volume-claim

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: bb-php-volume
+  namespace: production
+spec:
+  storageClassName: yc-network-hdd
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+    #- ReadWriteMany
+  hostPath:
+    path: "/var/www/beautybox/back/beautybox-back"
