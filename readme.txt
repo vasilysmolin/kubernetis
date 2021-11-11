@@ -25,12 +25,3 @@ SSl
     # kubectl create ns cert-manager
 2. Установка Cert-manager
     # kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
-
-
-Идентификатор ключа:
-hB-U5bVvjFhQGeM_Qor4
-Ваш секретный ключ:
-s8K4yqeSI6njPjjpDsg5H3Oa3S-d6Oxgqd1p0A_5
-Сохраните идентификатор и ключ. После закрытия диалога значение ключа будет недоступно.
-
-/var/lib/kubelet/pods/ba4d4382-9a7e-4307-8c93-5570d89446e2/volumes/kubernetes.io~csi/projects-pv/mount
